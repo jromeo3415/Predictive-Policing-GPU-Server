@@ -4,19 +4,21 @@ set -e
 TS_SOCKET="/var/run/tailscale/tailscaled.sock"
 TS_STATE="/var/lib/tailscale/tailscaled.state"
 
-echo "Tailscale key: $TAIL_SCALE_AUTH_KEY"
-
 echo "Starting tailscaled..."
-tailscaled --state="$TS_STATE" --socket="$TS_SOCKET" &
+tailscaled --state=$TS_STATE --socket=$TS_SOCKET &
 
-# Wait a moment for tailscaled to start
-sleep 3
+sleep 2
 
-echo "Bringing up Tailscale..."
-tailscale --socket="$TS_SOCKET" up \
-    --authkey="$TAIL_SCALE_AUTH_KEY" \
-    --accept-routes \
-    --hostname=gpu-container
+echo "Checking Tailscale status..."
+if tailscale --socket=$TS_SOCKET status >/dev/null 2>&1; then
+    echo "Tailscale already authenticated ✅"
+else
+    echo "Authenticating with Tailscale..."
+    tailscale --socket=$TS_SOCKET up \
+        --authkey=$TAIL_SCALE_AUTH_KEY \
+        --accept-routes \
+        --hostname=gpu-container
+fi
 
-echo "Starting app..."
-exec python server.py
+echo "Starting FastAPI app..."
+exec uvicorn app.main:app --host 0.0.0.0 --port 5000

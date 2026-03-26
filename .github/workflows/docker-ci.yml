@@ -1,0 +1,33 @@
+name: Build & Push GPU Server
+
+# Trigger workflow on push to main branch (or any branch you want)
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Log in to GitHub Container Registry (GHCR)
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3️⃣ Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/predictive-policining-ml-server:latest .
+
+      # 4️⃣ Push the Docker image to GHCR
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/predictive-policining-ml-server:latest

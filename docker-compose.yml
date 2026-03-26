@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  gpu-app:
+    image: josephromeo/gpu-server:latest
+    container_name: gpu-container
+    restart: always
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - TAIL_SCALE_AUTH_KEY=${TAIL_SCALE_AUTH_KEY}
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+    ports:
+      - "5000:5000"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 --label-enable
+    restart: always
+
+volumes:
+  tailscale-state:

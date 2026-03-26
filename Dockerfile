@@ -10,8 +10,7 @@ RUN apt-get update && \
 RUN curl -fsSL https://tailscale.com/install.sh | sh
 
 # Create directories
-RUN mkdir -p /var/run/tailscale
-RUN mkdir -p /var/lib/tailscale
+RUN mkdir -p /var/run/tailscale /var/lib/tailscale
 
 # Persist Tailscale state
 VOLUME ["/var/lib/tailscale"]
@@ -35,7 +34,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose port
 EXPOSE 5000
 
-# Copy entrypoint script
+# Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
