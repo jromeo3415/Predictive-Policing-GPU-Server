@@ -3,15 +3,18 @@ FROM pytorch/pytorch:2.10.0-cuda13.0-cudnn9-runtime
 
 # Install system packages
 RUN apt-get update && \
-    apt-get install -y python3-venv python3-pip curl && \
-    apt-get install -y curl iptables sudo && \
+    apt-get install -y python3-venv python3-pip curl iptables sudo && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Tailscale
 RUN curl -fsSL https://tailscale.com/install.sh | sh
 
-# Create directory for Tailscale socket
+# Create directories
 RUN mkdir -p /var/run/tailscale
+RUN mkdir -p /var/lib/tailscale
+
+# Persist Tailscale state
+VOLUME ["/var/lib/tailscale"]
 
 # Set working directory
 WORKDIR /app
@@ -32,5 +35,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose port
 EXPOSE 5000
 
-# Start tailscale and server at runtime
-CMD ["sh", "-c", "tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock & sleep 2 && tailscale --socket=/var/run/tailscale/tailscaled.sock up --authkey=$TAIL_SCALE_AUTH_KEY --accept-routes --hostname=gpu-container && bash"]
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+CMD ["/entrypoint.sh"]
